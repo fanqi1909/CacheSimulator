@@ -6,7 +6,6 @@ package app;
  *
  */
 public class mainApp {
-
 	/**
 	 * @param args
 	 */
