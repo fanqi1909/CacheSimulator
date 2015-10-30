@@ -2,7 +2,7 @@ package caches;
 
 import static conf.Constants.*;
 
-import java.util.Random;
+import lru.Policy;
 
 /**
  * L2 cache is 256Kb, block size 64 byte, 8-way set associative L2 is
@@ -18,8 +18,17 @@ import java.util.Random;
 
 public class L2Cache {
 	private long[][] cache;
-	public L2Cache() {
+	private Policy[] policies;
+	public L2Cache(Class<?> policyName) {
 		cache = new long[L2SETS][8];
+		policies = new Policy[L2SETS];
+		try {
+			for(int i = 0; i < policies.length; i++) {
+				policies[i] = (Policy) policyName.newInstance();
+			}
+		} catch (InstantiationException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
 	}
 	/**
 	 * read data in cache
@@ -30,19 +39,6 @@ public class L2Cache {
 		findBlock(addr);
 	}
 
-	/**
-	 * update cache[setIndex] with tag, here needs the LRU strategy
-	 * 
-	 * @param setIndex
-	 * @param tag
-	 * @return position of this address
-	 */
-	private int update(int setIndex, long tag) {
-		//TODO:: LRU
-		Random r = new Random();
-		cache[setIndex][r.nextInt(100) & 0x0007] = tag;
-		return 0;
-	}
 
 	/**
 	 * L2 is write-through, that is any write happens, will write to memory
@@ -62,19 +58,18 @@ public class L2Cache {
 		// find cache by splitting addr into multiple segs
 		int setIndex = (int) ((addr & 0x7FC0) >>> 6);
 		long tag = (addr & 0x3FFFFFFFFFFF8000l) >>> 15;
-		boolean found = false;
 		// search for the set to check for existence
 		for (int j = 0; j < 8; j++) {
 			if (cache[setIndex][j] == tag) {
-				found = true;
-				break;
+				policies[setIndex].updateAt(j);
+				return j;
 			}
 		}
-		if (!found) {
-			//fetch from memory;
-		}
+		//fetch from memory;
+		//insert to cache;
+		int index = policies[setIndex].getNextIndex();
+		cache[setIndex][index] = tag;
 		// after all, we need to update the entry
-		int index = update(setIndex, tag);
 		return index;
 	}
 	

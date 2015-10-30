@@ -1,8 +1,7 @@
 package caches;
 
 import static conf.Constants.*;
-
-import java.util.Random;
+import lru.Policy;
 
 /**
  * L1 instruction cache is 32Kb,  block size 64 byte, 8-way set associative
@@ -19,10 +18,19 @@ public class L1InstructionCache {
 	private L2Cache myL2;
 	
 	private long[][] cache;
+	private Policy[] policies;
 	
-	public L1InstructionCache(L2Cache l2) {
+	public L1InstructionCache(L2Cache l2, Class<?> policyClass) {
 		myL2 = l2;
 		cache = new long[L1INSETS][8];
+		policies = new Policy[L1INSETS]; //each policy for one cacheline
+		try {
+			for (int i = 0; i < policies.length; i++) {
+				policies[i] = (Policy) policyClass.newInstance();
+			}
+		} catch (InstantiationException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
 	}
  
 
@@ -35,29 +43,17 @@ public class L1InstructionCache {
 		for(int j = 0; j < 8; j++) {
 			if(cache[setIndex][j] == tag) {
 				found = true;
+				//update this entry in LRU
+				policies[setIndex].updateAt(j);
 				break;
 			}
 		}
 		if(!found) {
 			//too bad, the same address is passed to L2
 			myL2.read(addr);
+			//after all, we need to update the entry
+			int nextIndex = policies[setIndex].getNextIndex();
+			cache[setIndex][nextIndex] = tag;	
 		}
-		//after all, we need to update the entry
-		update(setIndex, tag);
-	}
-
-
-	/**
-	 * insert tag into setIndex, this is where the replacement policy should
-	 * takes place
-	 * @param setIndex
-	 * @param tag
-	 * @return index, the position current address at
-	 */
-	private int update(int setIndex, long tag) {
-		//TODO:: replace the logic by LRU or others
-		Random r=  new Random();
-		cache[setIndex][r.nextInt(100) & 0x0007] = tag;
-		return -1;
 	}
 }

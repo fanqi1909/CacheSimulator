@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import lru.TreeBasedLRU;
+
 import conf.Constants;
 import caches.L1DataCache;
 import caches.L1InstructionCache;
@@ -20,14 +22,12 @@ public class MyCPU {
 	//we do not have direct access to L2 caches 
 	private L1InstructionCache l1in;
 	private L1DataCache l1d;
-	//statistics variables
-
 	
 	public MyCPU() {
-		L2Cache l2 = new L2Cache();
+		L2Cache l2 = new L2Cache(TreeBasedLRU.class);
 		//ensure that l1s get the same l2
-		l1in = new L1InstructionCache(l2);
-		l1d = new L1DataCache(l2);
+		l1in = new L1InstructionCache(l2, TreeBasedLRU.class);
+		l1d = new L1DataCache(l2, TreeBasedLRU.class);
 	}
 	
 	public void Simulate(String inputFile) {
@@ -58,12 +58,15 @@ public class MyCPU {
 		if(lasttwo == 0) { //instruction fetch
 		 	l1in.fetch(instruction);
 		} else if(lasttwo == 1) { //load 
-			l1d.read(instruction);
+			l1d.access(instruction);
 		} else if(lasttwo == 2) { //write 
-			l1d.write(instruction);
+			l1d.access(instruction);
 		}
 	}
 
+	/**
+	 * need to collect relevant statistics
+	 */
 	public void printStats() {
 		
 	}
