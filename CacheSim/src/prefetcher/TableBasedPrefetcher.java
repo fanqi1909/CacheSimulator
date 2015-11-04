@@ -12,7 +12,7 @@ import java.util.HashMap;
  * However, L2 data cache do not have the instruction address.  The
  * trick we use is to compute tags of a given address. Using that tag as the index. 
  * 
- * @author fanqi_000
+ * @author e0001421
  *
  */
 public class TableBasedPrefetcher implements Prefetcher{

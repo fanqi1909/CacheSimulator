@@ -25,4 +25,8 @@ public class Constants {
 	
 	
 	public static final int L1ESLOT = 8; //8 slots,  each 64 byte
+	
+	public static final String gz_trace_file = "/Users/cuixiang/Desktop/NUS/2015_16_sem1/CS5222/homework/gz.trace";
+
+	public static final String ls_trace_file = "/Users/cuixiang/Desktop/NUS/2015_16_sem1/CS5222/homework/ls.trace";
 }

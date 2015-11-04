@@ -20,8 +20,10 @@ public class L1DataCache {
 	private L2Cache l2;
 	private long[][] cache;
 	private Policy[] policies;
+	private boolean useL1EvictedCache;
 
-	public L1DataCache(L2Cache l2, Class<?> lruClass) {
+	public L1DataCache(L2Cache l2, Class<?> lruClass, boolean useL1EvictedCache) {
+		this.useL1EvictedCache = useL1EvictedCache;
 		l1e = new L1EvictedCache();
 		this.l2 = l2;
 		cache = new long[L1DSETS][8];
@@ -58,19 +60,24 @@ public class L1DataCache {
 		if(result != 1)
 		{
 			long address = getAddress(setIndex, tag);
-			if (!l1e.lookup(address)) {
+			if (useL1EvictedCache){
+				if (!l1e.lookup(address)) {
+					result = l2.read(address);
+				}
+				else
+					result = 2;
+			}
+			else {
 				result = l2.read(address);
 			}
-			else
-				result = 2;
 		}
-		
 		int index = policies[setIndex].getNextIndex();
 		if (cache[setIndex][index] != 0l) {
 			long old_address = getAddress((setIndex << 6),
 					cache[setIndex][index]);
 			// put old address to victim cache
-			l1e.insert(old_address);
+			if(useL1EvictedCache)
+				l1e.insert(old_address);
 		}
 		// write back
 		cache[setIndex][index] = tag;

@@ -43,11 +43,12 @@ public class MyCPU {
 	private int CountDataStoreHitL2;
 	private int CountDataStoreHitMem;
 	
-	public MyCPU() {
-		L2Cache l2 = new L2Cache(BitBasedLRU.class, TableBasedPrefetcher.class);
+	public MyCPU(boolean useVictimCacheL1, boolean usePreFetcherL2) {
+		
+		L2Cache l2 = new L2Cache(BitBasedLRU.class, TableBasedPrefetcher.class, usePreFetcherL2); //the other two classes are not in use
 		//ensure that l1s get the same l2
 		l1in = new L1InstructionCache(l2, BitBasedLRU.class);
-		l1d = new L1DataCache(l2, BitBasedLRU.class);
+		l1d = new L1DataCache(l2, BitBasedLRU.class, useVictimCacheL1);
 		
 		CountTotalInstruction = 0;
 		CountTotalInstructionFetch = 0;
@@ -80,6 +81,8 @@ public class MyCPU {
 				bbf.order(ByteOrder.LITTLE_ENDIAN);
 				long instruction = bbf.getLong();
 				int result = process(instruction);
+				//use different values in the result in indicate the status
+				//should have thought of the idea of using global variables
 				switch(result){
 				case 1: 
 					CountInstructionFetchHitL1++;
@@ -116,7 +119,6 @@ public class MyCPU {
 					break;
 				default:
 					break;
-				
 				}
 			}
 			fis.close();

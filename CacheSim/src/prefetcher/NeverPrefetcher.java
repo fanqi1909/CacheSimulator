@@ -5,7 +5,7 @@ import java.util.ArrayList;
 /**
  * used as a baseline to check whether
  * prefetcher works or not
- * @author fanqi_000
+ * @author e0001421
  *
  */
 public class NeverPrefetcher implements Prefetcher {

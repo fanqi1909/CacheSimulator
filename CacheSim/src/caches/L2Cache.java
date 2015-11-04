@@ -24,7 +24,9 @@ public class L2Cache {
 	private long[][] cache;
 	private Policy[] policies;
 	private Prefetcher pf;
+	private boolean usePrefetch;
 	public L2Cache(Class<?> policyName) {
+		usePrefetch = false; //by default not use it
 		cache = new long[L2SETS][8];
 		policies = new Policy[L2SETS];
 		try {
@@ -37,7 +39,8 @@ public class L2Cache {
 		pf = new NeverPrefetcher();
 	}
 	
-	public L2Cache(Class<?> policyName, Class<?> prefetchClass) {
+	public L2Cache(Class<?> policyName, Class<?> prefetchClass, boolean usePrefetch) {
+		this.usePrefetch = usePrefetch;
 		cache = new long[L2SETS][8];
 		policies = new Policy[L2SETS];
 		try {
@@ -85,11 +88,17 @@ public class L2Cache {
 				return 3;
 			}
 		}
-		//fetch from memory; preftecher will fetch many other relavent addresses
-		ArrayList<Long> address = pf.getPrefetchedAddress(addr);
-		for(long add : address) {
-			setIndex = (int) ((add & 0x7FC0) >>> 6);
-			tag = (add & 0x3FFFFFFFFFFF8000l) >>> 15;
+		if(usePrefetch){
+			//fetch from memory; preftecher will fetch many other relevant addresses
+			ArrayList<Long> address = pf.getPrefetchedAddress(addr);
+			for(long add : address) {
+				setIndex = (int) ((add & 0x7FC0) >>> 6);
+				tag = (add & 0x3FFFFFFFFFFF8000l) >>> 15;
+				int index = policies[setIndex].getNextIndex();
+				cache[setIndex][index] = tag;
+			}
+		}
+		else{
 			int index = policies[setIndex].getNextIndex();
 			cache[setIndex][index] = tag;
 		}
