@@ -6,7 +6,7 @@ package lru;
  * and each tree node is either 0 or 1, we can use
  * an integer to represent the tree.
  * A tree's node is 0 if its left is more recent, otherwise its right is more recent
- * @author a0048267
+ * @author e0001421
  *
  */
 public class TreeBasedLRU implements Policy {
@@ -23,6 +23,7 @@ public class TreeBasedLRU implements Policy {
 	 * return the Least Recently Used index from current LRU
 	 * @return
 	 */
+	@Override
 	public int getNextIndex() {
 		//traverse the tree
 		int pos = 0;// from root;
@@ -38,11 +39,9 @@ public class TreeBasedLRU implements Policy {
 		}
 		//at this step, position is the leave node
 		//but we need to update the tree before insert
-		updateAt(pos);
-		return pos-7; // deduct 7 because cache block is numbered from 0 to 7
+		updateAt(pos - 7);
+		return pos - 7; // deduct 7 because cache block is numbered from 0 to 7
 	}
-	
-	
 	
 	public static void main(String[] args) {
 		TreeBasedLRU tlru = new TreeBasedLRU();
@@ -58,13 +57,15 @@ public class TreeBasedLRU implements Policy {
 	 */
 	@Override
 	public void updateAt(int pos) {
+		pos += 7;	// consider the tree nodes in front
 		while(pos != 0) {
 			//find pos's parent
 			int	parent = (pos-1)>>1;
 			if(pos == (parent+1) * 2 ) {
 				//right child
 				tree[parent] = 1;
-			} else {
+			} 
+			else {
 				tree[parent] = 0;
 			}
 			pos = parent;

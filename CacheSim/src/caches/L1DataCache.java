@@ -12,7 +12,7 @@ import lru.Policy;
  * -bit----tag|------6-bit--set-index---|----6-bit-offset---| 63 62 61 12 11 6 5
  * 0
  * 
- * @author a0048267
+ * @author e0001421
  * 
  */
 public class L1DataCache {
@@ -45,19 +45,26 @@ public class L1DataCache {
 	 * @param addr
 	 */
 	private int findBlock(int setIndex, long tag) {
+		int result = 0;
 		// search for the set to check for existence
 		for (int j = 0; j < 8; j++) {
 			if (cache[setIndex][j] == tag) {
 				policies[setIndex].updateAt(j);
-				return j;
+				result = 1;
 			}
 		}
 		// we cannot find a block, thus needs to
 		// do further look ups
-		long address = getAddress(setIndex, tag);
-		if (!l1e.lookup(address)) {
-			l2.read(address);
+		if(result != 1)
+		{
+			long address = getAddress(setIndex, tag);
+			if (!l1e.lookup(address)) {
+				result = l2.read(address);
+			}
+			else
+				result = 2;
 		}
+		
 		int index = policies[setIndex].getNextIndex();
 		if (cache[setIndex][index] != 0l) {
 			long old_address = getAddress((setIndex << 6),
@@ -67,7 +74,7 @@ public class L1DataCache {
 		}
 		// write back
 		cache[setIndex][index] = tag;
-		return index;
+		return result;
 	}
 
 	/**
@@ -108,8 +115,8 @@ public class L1DataCache {
 	 * Note that, findBlock will override the address content of victims.
 	 * @param addr
 	 */
-	public void access(long addr) {
-		findBlock(getSetIndex(addr), getTag(addr));
+	public int access(long addr) {
+		return findBlock(getSetIndex(addr), getTag(addr));
 	}
 
 }

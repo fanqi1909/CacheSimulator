@@ -6,7 +6,7 @@ import static conf.Constants.*;
  * victim cache is in L1, fully-associative
  * If a data read/write succeeds, the data is moved back to L1 data cache
  * but there is no policy class for L1E
- * @author a0048267
+ * @author e0001421
  *
  */
 public class L1EvictedCache {
@@ -48,7 +48,7 @@ public class L1EvictedCache {
 		}
 		if(!inserted) {
 			//cache is full;
-			cache[(r.nextInt(100) & 0xF)] = addr;
+			cache[(r.nextInt(100) & 0x7)] = addr;
 		}
 	}
 }

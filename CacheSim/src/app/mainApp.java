@@ -4,7 +4,7 @@ import cpu.MyCPU;
 
 /**
  * entry point of the entire simulator
- * @author a0048267
+ * @author e0001421
  *
  */
 public class mainApp {

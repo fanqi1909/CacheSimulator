@@ -34,7 +34,8 @@ public class L1InstructionCache {
 	}
  
 
-	public void fetch(long addr) {
+	public int fetch(long addr) {
+		int result = 0;
 		//find cache by splitting addr into multiple segs
 		int setIndex = (int) ((addr & 0xFFFl)>>6); // there is no overflow
 		long tag = (addr & 0x3FFFFFFFFFFFF000l);
@@ -43,6 +44,7 @@ public class L1InstructionCache {
 		for(int j = 0; j < 8; j++) {
 			if(cache[setIndex][j] == tag) {
 				found = true;
+				result = 1;
 				//update this entry in LRU
 				policies[setIndex].updateAt(j);
 				break;
@@ -50,10 +52,11 @@ public class L1InstructionCache {
 		}
 		if(!found) {
 			//too bad, the same address is passed to L2
-			myL2.read(addr);
+			result = myL2.read(addr);
 			//after all, we need to update the entry
 			int nextIndex = policies[setIndex].getNextIndex();
 			cache[setIndex][nextIndex] = tag;	
 		}
+		return result;
 	}
 }

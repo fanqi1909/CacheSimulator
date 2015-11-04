@@ -35,8 +35,8 @@ public class L2Cache {
 	 * 
 	 * @param addr
 	 */
-	public void read(long addr) {
-		findBlock(addr);
+	public int read(long addr) {
+		return findBlock(addr);
 	}
 
 
@@ -44,8 +44,8 @@ public class L2Cache {
 	 * L2 is write-through, that is any write happens, will write to memory
 	 * @param addr
 	 */
-	public void write(long addr) {
-		findBlock(addr);
+	public int write(long addr) {
+		return findBlock(addr);
 	}
 	
 	/**
@@ -62,15 +62,15 @@ public class L2Cache {
 		for (int j = 0; j < 8; j++) {
 			if (cache[setIndex][j] == tag) {
 				policies[setIndex].updateAt(j);
-				return j;
+				return 3;
 			}
 		}
 		//fetch from memory;
-		//insert to cache;
+		//TODO: Implement stride prefetcher -> insert to cache;
 		int index = policies[setIndex].getNextIndex();
 		cache[setIndex][index] = tag;
 		// after all, we need to update the entry
-		return index;
+		return 4;
 	}
 	
 }
