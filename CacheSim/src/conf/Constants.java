@@ -24,5 +24,5 @@ public class Constants {
 	public static final int L1DSETSIZE = 6; // bit, log2(64)
 	
 	
-	public static final int L1ESLOT = 8; //16 slots,  each 64 byte
+	public static final int L1ESLOT = 8; //8 slots,  each 64 byte
 }
