@@ -7,6 +7,8 @@ import java.nio.ByteOrder;
 
 import lru.BitBasedLRU;
 import lru.TreeBasedLRU;
+import prefetcher.NeverPrefetcher;
+import prefetcher.TableBasedPrefetcher;
 import conf.Constants;
 import caches.L1DataCache;
 import caches.L1InstructionCache;
@@ -42,7 +44,7 @@ public class MyCPU {
 	private int CountDataStoreHitMem;
 	
 	public MyCPU() {
-		L2Cache l2 = new L2Cache(BitBasedLRU.class);
+		L2Cache l2 = new L2Cache(BitBasedLRU.class, TableBasedPrefetcher.class);
 		//ensure that l1s get the same l2
 		l1in = new L1InstructionCache(l2, BitBasedLRU.class);
 		l1d = new L1DataCache(l2, BitBasedLRU.class);

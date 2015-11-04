@@ -2,7 +2,11 @@ package caches;
 
 import static conf.Constants.*;
 
+import java.util.ArrayList;
+
 import lru.Policy;
+import prefetcher.NeverPrefetcher;
+import prefetcher.Prefetcher;
 
 /**
  * L2 cache is 256Kb, block size 64 byte, 8-way set associative L2 is
@@ -19,6 +23,7 @@ import lru.Policy;
 public class L2Cache {
 	private long[][] cache;
 	private Policy[] policies;
+	private Prefetcher pf;
 	public L2Cache(Class<?> policyName) {
 		cache = new long[L2SETS][8];
 		policies = new Policy[L2SETS];
@@ -29,7 +34,22 @@ public class L2Cache {
 		} catch (InstantiationException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
+		pf = new NeverPrefetcher();
 	}
+	
+	public L2Cache(Class<?> policyName, Class<?> prefetchClass) {
+		cache = new long[L2SETS][8];
+		policies = new Policy[L2SETS];
+		try {
+			for(int i = 0; i < policies.length; i++) {
+				policies[i] = (Policy) policyName.newInstance();
+			}
+			pf = (Prefetcher) prefetchClass.newInstance();
+		} catch (InstantiationException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	/**
 	 * read data in cache
 	 * 
@@ -65,10 +85,14 @@ public class L2Cache {
 				return 3;
 			}
 		}
-		//fetch from memory;
-		//TODO: Implement stride prefetcher -> insert to cache;
-		int index = policies[setIndex].getNextIndex();
-		cache[setIndex][index] = tag;
+		//fetch from memory; preftecher will fetch many other relavent addresses
+		ArrayList<Long> address = pf.getPrefetchedAddress(addr);
+		for(long add : address) {
+			setIndex = (int) ((add & 0x7FC0) >>> 6);
+			tag = (add & 0x3FFFFFFFFFFF8000l) >>> 15;
+			int index = policies[setIndex].getNextIndex();
+			cache[setIndex][index] = tag;
+		}
 		// after all, we need to update the entry
 		return 4;
 	}
